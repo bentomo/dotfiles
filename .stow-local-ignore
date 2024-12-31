@@ -1,0 +1,5 @@
+# comments and blank lines are ok
+# stow will ignore anything listed in this file
+README.md
+.git
+.gitignore

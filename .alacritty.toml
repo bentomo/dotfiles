@@ -1,0 +1,16 @@
+[terminal]
+    shell = { program = "/bin/zsh", args = ["-l"] }
+
+[mouse]
+    hide_when_typing = true
+
+[keyboard]
+    bindings = [
+        { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+    ]
+
+[env]
+    term = "xterm-256color"
+
+[window]
+    dynamic_title = true

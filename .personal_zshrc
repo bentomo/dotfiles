@@ -1,0 +1,89 @@
+#source this file first in ~/.zshrc to set up non machine specific settings
+
+#set -x; #profil enable
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=50000
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/$USER/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+# Austins customizations
+export SHELL=zsh
+# use unix epoch time 
+setopt EXTENDED_HISTORY
+# save history from multiple shells, but don't reread them from all sessions automatically
+setopt INC_APPEND_HISTORY
+# expire duplicates first
+setopt HIST_EXPIRE_DUPS_FIRST 
+#ignore duplicates when searching
+setopt HIST_FIND_NO_DUPS
+# removes blank lines from history
+setopt HIST_REDUCE_BLANKS
+
+#prompt
+#PROMPT='%F{green}%n@%m%f %F{blue}%4d%f $ '
+autoload -U colors && colors
+#PS1="%{$fg[]%}%n%{$reset_color%}@%{$fg[green]%}%m %{$fg[blue]%}%~ %{$reset_color%}%$ "
+export PS1="%{%F{39}%}%n%{%F{45}%}@%{%F{51}%}%m %{%F{34}%}%1~ %{%f%}$ "
+#export PS1="%{$(tput setaf 39)%}%n%{$(tput setaf 45)%}@%{$(tput setaf 51)%}%m %{$(tput setaf 195)%}%1~ %{$(tput sgr0)%}$ "
+RPROMPT='%D @ %T'
+
+DISABLE_AUTO_TITLE="true"
+
+function set_terminal_title() {
+  echo -en "\e]2;$@\a"
+}
+set_terminal_title DISABLE_AUTO_TITLE="true"
+
+function set_terminal_title() {
+  echo -en "\e]2;$@\a"
+}
+set_terminal_title $(hostname)
+
+bindkey "^R" history-incremental-search-backward
+bindkey "^S" history-incremental-search-forward
+# vi mode doesn't let you backspace after shift+a for some reason without this
+bindkey -v '^?' backward-delete-char
+# disable terminal trapping ctrl + s, re-enable by removing the dash
+stty -ixon
+
+# print colors in terminal
+# for i in {0..255}; do  printf "\x1b[38;5;${i}mcolor%-5i\x1b[0m" $i ; if ! (( ($i + 1 ) % 8 )); then echo ; fi ; done
+
+alias vim='nvim'
+export EDITOR=vim
+#vim transient buffer
+alias vimt="vim -c 'setlocal nobuflisted buftype=nofile bufhidden=wipe noswapfile'"
+
+export MANPAGER="nvim +Man!"
+
+alias cd='cd -P'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+alias tm="/bin/time -f \"Sec:Usr:Sys:CPU\\n%e %U %S %P\""
+# for an arbitray number of directories e.g. `up 6` goes up 6 directories
+up() { cd $(eval printf '../'%.0s {1..$1}); }
+alias t='() { tree -L $1 ;}'
+alias rl='readlink -f'
+alias ll='ls -lah'
+alias lsize="du -ah ./ --max-depth=1 | sort -rh | head -25"
+alias ls="ls --color=auto"
+alias agent='eval "$(ssh-agent -s)"; ssh-add ~/.ssh/id_ed25519'
+
+#parse a perf file and print out the run time
+perfruntime() {  
+  local perf_file="${1:-perf.data}"  
+  perf script -i "$perf_file" | perl -ne 'BEGIN { $first = undef; $last = 0; } if (/^\S+\s+\d+\s+(\d+\.\d+):\s+/) { $first = $1 if !defined $first; $last = $1; } END { my $total = $last - $first; my $hours = int($total / 3600); my $minutes = int(($total % 3600) / 60); my $seconds = $total % 60; printf "Total runtime: %02d:%02d:%06.3f\n", $hours, $minutes, $seconds; }'  
+}  
+
+alias lsf_setup='source /group/sw/lib/profile.lsf; export PATH=/group/sw/bin:$PATH'

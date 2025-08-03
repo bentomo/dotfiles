@@ -6,6 +6,9 @@
 vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
+--true color
+vim.o.termguicolors = true
+
 -- quick jumps
 vim.keymap.set("n", "<leader>j", "20j")
 vim.keymap.set("n", "<leader>k", "20k")
@@ -27,9 +30,9 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
-vim.opt.tabstop = 4
-vim.opt.softtabstop = 4
-vim.opt.shiftwidth = 4
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 
 vim.opt.smartindent = true
@@ -83,3 +86,12 @@ vim.keymap.set("v", "<leader>d", "\"_d")
 -- find and replace word that you're on
 vim.keymap.set("n", "<leader>S", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
+-- lsp option to display virtualtext
+-- TODO - add a repeat dot command https://www.reddit.com/r/neovim/comments/1cgxt0x/comment/l1ywi1j/?context=3&share_id=t1d3KTe-KFM3HFu17cnQd&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
+vim.keymap.set("n", "<leader>ls", "<cmd> lua vim.diagnostic.open_float() <CR>")
+vim.keymap.set("n", "<leader>ln", "<cmd> lua vim.diagnostic.goto_next() <CR>")
+vim.keymap.set("n", "<leader>lp", "<cmd> lua vim.diagnostic.goto_next() <CR>")
+
+-- fix cindent for switch statements
+vim.cmd("autocmd FileType c,cpp setlocal shiftwidth=4 tabstop=4 cindent expandtab")
+vim.cmd("set cinoptions=:0,l1,g0,(0,W4,m1")

@@ -58,6 +58,7 @@ stty -ixon
 # for i in {0..255}; do  printf "\x1b[38;5;${i}mcolor%-5i\x1b[0m" $i ; if ! (( ($i + 1 ) % 8 )); then echo ; fi ; done
 
 alias vim='nvim'
+alias v='nvim'
 export EDITOR=vim
 #vim transient buffer
 alias vimt="vim -c 'setlocal nobuflisted buftype=nofile bufhidden=wipe noswapfile'"
@@ -71,6 +72,7 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 alias ......='cd ../../../../..'
 alias tm="/bin/time -f \"Sec:Usr:Sys:CPU\\n%e %U %S %P\""
+alias l="ls --block-size=\"'1\""
 # for an arbitray number of directories e.g. `up 6` goes up 6 directories
 up() { cd $(eval printf '../'%.0s {1..$1}); }
 alias t='() { tree -L $1 ;}'
@@ -87,3 +89,11 @@ perfruntime() {
 }  
 
 alias lsf_setup='source /path/to/cluster/lib/profile.lsf; export PATH=/path/to/cluster/bin:$PATH'
+
+psmem() {
+    echo "PID PPID USER %CPU %MEM VSZ(MB) RSS(MB) STAT START TIME COMMAND"
+    ps -p "$1" -o pid,ppid,user,%cpu,%mem,vsz,rss,stat,start,time,command --no-headers | \
+    awk '{printf "%s %s %s %s %s %.2f %.2f %s %s %s", 
+          $1, $2, $3, $4, $5, $6/1024, $7/1024, $8, $9, $10; 
+          for(i=11;i<=NF;i++) printf " %s", $i; printf "\n"}'
+}

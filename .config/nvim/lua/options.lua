@@ -93,5 +93,5 @@ vim.keymap.set("n", "<leader>ln", "<cmd> lua vim.diagnostic.goto_next() <CR>")
 vim.keymap.set("n", "<leader>lp", "<cmd> lua vim.diagnostic.goto_next() <CR>")
 
 -- fix cindent for switch statements
-vim.cmd("autocmd FileType c,cpp setlocal shiftwidth=4 tabstop=4 cindent expandtab")
+vim.cmd("autocmd FileType c,cpp setlocal shiftwidth=2 tabstop=2 cindent expandtab")
 vim.cmd("set cinoptions=:0,l1,g0,(0,W4,m1")

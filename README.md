@@ -14,6 +14,43 @@ fzf
 And to delete the symlinks run
 `stow -t ~ -D .`
 
+# Compiling tmux 3.5 from source on redhat/fedora
+---
+1. Install build dependencies:
+   sudo dnf install -y \
+       gcc make pkg-config bison \
+       libevent-devel \
+       ncurses-devel \
+       autoconf automake
+
+   Note: if libevent-devel is not in base repos, try:
+   sudo dnf install -y epel-release
+   sudo dnf install -y libevent-devel
+
+2. Download tmux source (latest stable — check https://github.com/tmux/tmux/releases):
+   cd /tmp
+   curl -LO https://github.com/tmux/tmux/releases/download/3.5/tmux-3.5.tar.gz
+   tar -xzf tmux-3.5.tar.gz
+   cd tmux-3.5
+
+3. Configure and build:
+   ./configure --prefix=/usr/local
+   make -j$(nproc)
+
+4. Install:
+   sudo make install
+
+   This installs to /usr/local/bin/tmux. Verify:
+   /usr/local/bin/tmux -V
+
+5. Make sure /usr/local/bin is first in your PATH (it should be already if your
+   .personal_zshrc or .zshrc has a PATH prepend). Verify the right tmux is used:
+   which tmux
+   tmux -V
+
+6. (Optional) If you want the system tmux replaced:
+   sudo ln -sf /usr/local/bin/tmux /usr/bin/tmux
+
 # Clipboard Over SSH (Windows → WSL → RHEL)
 ---
 Getting copy-paste to work across the full stack (WezTerm on Windows, tmux and
@@ -100,6 +137,79 @@ from Windows, use `Ctrl+Shift+V` (WezTerm bracketed paste) instead.
 
 - `Ctrl+Shift+V` in WezTerm — sends Windows clipboard as bracketed paste through SSH, works everywhere
 - `prefix + ]` in tmux — pastes from tmux's own buffer
+
+# tmux-resurrect (session save/restore)
+---
+
+tmux-resurrect saves and restores tmux sessions — session names, windows, pane
+layouts, working directories, and optionally running programs. It is installed
+without TPM directly into the proj space so nothing touches `/home`.
+
+## What is and isn't restored
+
+- Session names, window names, pane count and layout: **yes**
+- Working directory per pane: **yes**
+- Neovim instances: **yes** — nvim is restarted in the correct directory
+- All other processes (shells, compiles, perf jobs, etc.): **no** — panes
+  restore to a clean shell in the saved working directory
+- Unsaved buffer content, running process state: **never** (nothing can restore these)
+
+## Installation
+
+```bash
+# Clone into proj space — nothing goes to /home
+git clone https://github.com/tmux-plugins/tmux-resurrect \
+    /path/to/$USER/bin/tmux-resurrect
+
+# Create the save directory
+mkdir -p /path/to/$USER/bin/tmux-sessions
+```
+
+## tmux.conf snippet
+
+Add this block to `.tmux.conf` (already done if using this dotfiles repo):
+
+```tmux
+# ── tmux-resurrect ───────────────────────────────────────────────────────────
+# Save directory on proj space — keeps /home clean, survives host reboots
+set -g @resurrect-dir '/path/to/$USER/bin/tmux-sessions'
+
+# Only restart nvim on restore — everything else drops back to a clean shell
+set -g @resurrect-processes 'nvim'
+
+# Keybindings (set before run-shell so the plugin picks them up)
+# prefix + Ctrl-s  →  save
+# prefix + Ctrl-u  →  restore  (Ctrl-r is reserved for zsh history search)
+set -g @resurrect-save    'C-s'
+set -g @resurrect-restore 'C-u'
+
+run-shell /path/to/$USER/bin/tmux-resurrect/resurrect.tmux
+```
+
+## Usage
+
+| Action | Key |
+|---|---|
+| Save current sessions | `prefix + Ctrl-s` |
+| Restore last saved sessions | `prefix + Ctrl-u` |
+
+Save before planned kills or upgrades. After a crash or reboot, start a fresh
+tmux server and press `prefix + Ctrl-u` to restore.
+
+## Updating
+
+```bash
+cd /path/to/$USER/bin/tmux-resurrect && git pull
+```
+
+## Notes
+
+- Save files are plain text, a few KB each. Resurrect keeps the last 5 saves
+  by default; the most recent is always symlinked as `last`.
+- The save directory (`tmux-sessions/`) is on the cluster NFS so it is
+  accessible from any machine you run tmux on.
+- The plugin scripts load once at tmux server start — NFS latency is not a
+  practical concern for save/restore operations.
 
 # Wezterm
 ---

@@ -6,6 +6,28 @@
 vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
+-- OSC 52 clipboard — copies travel to the Windows clipboard over SSH via
+-- WezTerm without needing xclip or a display. Paste falls back to the
+-- internal unnamed register; use Ctrl+Shift+V in WezTerm for paste from
+-- Windows (full OSC 52 paste causes a ~10s freeze waiting for a response).
+local osc52 = require('vim.ui.clipboard.osc52')
+vim.g.clipboard = {
+  name = 'osc52',
+  copy = {
+    ['+'] = osc52.copy('+'),
+    ['*'] = osc52.copy('*'),
+  },
+  paste = {
+    ['+'] = function()
+      return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+    end,
+    ['*'] = function()
+      return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+    end,
+  },
+}
+vim.opt.clipboard:append({ 'unnamedplus' })
+
 --true color
 vim.o.termguicolors = true
 
@@ -15,7 +37,7 @@ vim.keymap.set("n", "<leader>k", "20k")
 vim.keymap.set("v", "<leader>j", "20j")
 vim.keymap.set("v", "<leader>k", "20k")
 
--- use xclip to copy through tmux
+-- explicit register copies (both land in OSC 52 → Windows clipboard)
 vim.keymap.set("v", "<leader>c", "\"*y")
 vim.keymap.set({"n","v"}, "<leader>P", "\"*p")
 

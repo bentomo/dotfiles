@@ -36,8 +36,9 @@ setopt PROMPT_SUBST
 # and zle-line-init trigger redraws when the keymap changes.
 _vi_mode_indicator() {
     case ${KEYMAP:-viins} in
-        vicmd)      print -n '%{%F{214}%}[N]%{%f%}' ;;
-        viins|main) print -n '%{%F{34}%}[I]%{%f%}' ;;
+        vicmd)         print -n '%{%F{214}%}[N]%{%f%}' ;;
+        visual)        print -n '%{%F{214}%}[V]%{%f%}' ;;
+        viins|main|*)  print -n '%{%F{34}%}[I]%{%f%}' ;;
     esac
 }
 
@@ -67,6 +68,13 @@ bindkey "^R" history-incremental-search-backward
 bindkey "^S" history-incremental-search-forward
 # vi mode doesn't let you backspace after shift+a for some reason without this
 bindkey -v '^?' backward-delete-char
+
+# Match neovim convention: 0 (rightmost number key) → end of line,
+# $ (shift+4, left of center) → beginning of line
+bindkey -M vicmd '0' end-of-line
+bindkey -M vicmd '$' beginning-of-line
+bindkey -M visual '0' end-of-line
+bindkey -M visual '$' beginning-of-line
 # disable terminal trapping ctrl + s, re-enable by removing the dash
 stty -ixon
 
@@ -105,6 +113,51 @@ perfruntime() {
 }  
 
 alias lsf_setup='source /path/to/cluster/lib/profile.lsf; export PATH=/path/to/cluster/bin:$PATH'
+
+# Pull other shells' history into this shell's memory for the session.
+# After running, up-arrow and Ctrl+R will include commands from all shells.
+# INC_APPEND_HISTORY means every shell writes to the file as it goes, so
+# fc -R just needs to re-read what's already there.
+hsync() { fc -R }
+
+# Alt+R — fzf search across ALL shells' history from the file, without
+# importing anything into the current shell's memory. Pastes the selected
+# command onto the command line without executing it.
+_history_all_fzf() {
+    local selected
+    # tac reverses histfile so newest commands come first.
+    # awk deduplicates keeping the first-seen (most recent) occurrence of each command.
+    # fzf scores exact matches above fuzzy; --tiebreak=index breaks ties by input
+    # position, and since input is newest-first, index 0 = most recent.
+    selected=$(
+        sed 's/^: [0-9]*:[0-9]*;//' ~/.histfile 2>/dev/null \
+        | tac \
+        | awk '!seen[$0]++' \
+        | fzf --tiebreak=index --prompt='all-history> '
+    )
+    [[ -n "$selected" ]] || return
+    LBUFFER="$selected"
+    RBUFFER=""
+    zle redisplay
+}
+zle -N _history_all_fzf
+bindkey '^Xr' _history_all_fzf   # Ctrl+X, r  (Alt+R consumed by Windows)
+
+# Re-source ~/.zshrc in every tmux pane that is sitting at a zsh prompt.
+# Only targets panes where zsh is the foreground process — skips nvim, running
+# jobs, etc. Panes with partial input will have the source command appended;
+# close enough to safe for an intentional "reload everything" operation.
+rezsh() {
+    if [[ -z "$TMUX" ]]; then
+        echo "rezsh: not inside tmux" >&2
+        return 1
+    fi
+    local target cmd
+    while read -r target cmd; do
+        [[ "$cmd" == "zsh" ]] && tmux send-keys -t "$target" "source ~/.zshrc" Enter
+    done < <(tmux list-panes -a \
+        -F '#{session_name}:#{window_index}.#{pane_index} #{pane_current_command}')
+}
 
 psmem() {
     echo "PID PPID USER %CPU %MEM VSZ(MB) RSS(MB) STAT START TIME COMMAND"

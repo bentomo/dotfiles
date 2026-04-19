@@ -6,16 +6,19 @@
 vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
--- OSC 52 clipboard — copies travel to the Windows clipboard over SSH via
--- WezTerm without needing xclip or a display. Paste falls back to the
--- internal unnamed register; use Ctrl+Shift+V in WezTerm for paste from
--- Windows (full OSC 52 paste causes a ~10s freeze waiting for a response).
-local osc52 = require('vim.ui.clipboard.osc52')
+-- OSC 52 clipboard — writes directly to the outer terminal TTY via osc52.sh,
+-- bypassing tmux's set-clipboard/Ms re-emit path which depends on terminfo
+-- and option scopes that proved unreliable across RHEL/tmux versions.
+-- Paste falls back to internal register; use Ctrl+Shift+V in WezTerm to paste.
+local osc52_script = os.getenv('HOME') .. '/.config/tmux/osc52.sh'
+local function osc52_copy(lines, _)
+  vim.fn.system(osc52_script, table.concat(lines, '\n'))
+end
 vim.g.clipboard = {
-  name = 'osc52',
+  name = 'osc52-tty',
   copy = {
-    ['+'] = osc52.copy('+'),
-    ['*'] = osc52.copy('*'),
+    ['+'] = osc52_copy,
+    ['*'] = osc52_copy,
   },
   paste = {
     ['+'] = function()

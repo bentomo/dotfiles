@@ -1,8 +1,9 @@
 # Dependencies
 ---
-Tmux 3.3+
+Tmux 3.5+
 Neovim 11+
 gnu stow
+fzf
 
 # Setup
 ---

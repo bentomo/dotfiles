@@ -101,6 +101,8 @@ alias l="ls --block-size=\"'1\""
 up() { cd $(eval printf '../'%.0s {1..$1}); }
 alias t='() { tree -L $1 ;}'
 alias rl='readlink -f'
+# readlink -f + copy to clipboard via OSC 52 (no trailing newline)
+rlc() { printf '%s' "$(readlink -f "$@")" | ~/.config/tmux/osc52.sh; }
 alias ll='ls -lah'
 alias lsize="du -ah ./ --max-depth=1 | sort -rh | head -25"
 alias ls="ls --color=auto"

@@ -114,8 +114,6 @@ perfruntime() {
   perf script -i "$perf_file" | perl -ne 'BEGIN { $first = undef; $last = 0; } if (/^\S+\s+\d+\s+(\d+\.\d+):\s+/) { $first = $1 if !defined $first; $last = $1; } END { my $total = $last - $first; my $hours = int($total / 3600); my $minutes = int(($total % 3600) / 60); my $seconds = $total % 60; printf "Total runtime: %02d:%02d:%06.3f\n", $hours, $minutes, $seconds; }'  
 }  
 
-alias lsf_setup='source /path/to/cluster/lib/profile.lsf; export PATH=/path/to/cluster/bin:$PATH'
-
 # Pull other shells' history into this shell's memory for the session.
 # After running, up-arrow and Ctrl+R will include commands from all shells.
 # INC_APPEND_HISTORY means every shell writes to the file as it goes, so
